@@ -67,12 +67,30 @@ def test_production_stt_token_secret_validation():
     assert prod_settings.stt_token_secret == "my-super-secret-key-12345"
 
 
+def test_production_allows_empty_cors_origins():
+    """Backend may deploy before frontend — empty CORS means no browser origins."""
+    prod = Settings(**_prod_kwargs(CORS_ORIGINS=""))
+    assert prod.cors_origins_list == []
+
+
+def test_production_allows_https_frontend_origin():
+    prod = Settings(**_prod_kwargs(CORS_ORIGINS="https://app.example.com"))
+    assert prod.cors_origins_list == ["https://app.example.com"]
+
+
+def test_production_rejects_localhost_cors_origin():
+    import pytest
+
+    with pytest.raises(ValueError, match="localhost"):
+        Settings(**_prod_kwargs(CORS_ORIGINS="http://localhost:3000"))
+
+
 def test_production_rejects_localhost_cors_default():
     import pytest
 
     kw = _prod_kwargs()
     del kw["CORS_ORIGINS"]
-    with pytest.raises(ValueError, match="CORS_ORIGINS"):
+    with pytest.raises(ValueError, match="localhost"):
         Settings(**kw)
 
 

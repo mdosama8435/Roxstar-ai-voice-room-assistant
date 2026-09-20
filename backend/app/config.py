@@ -71,15 +71,22 @@ class Settings(BaseSettings):
             errors.append("STT_TOKEN_SECRET must be explicitly set when ENVIRONMENT is 'production'")
 
         origins = self.cors_origins_list
-        if not origins:
-            errors.append("CORS_ORIGINS must be set to at least one production frontend origin")
-        elif any(o.strip() == "*" for o in origins):
-            errors.append("Wildcard CORS_ORIGINS (*) is not allowed in production")
-        elif self.cors_origins.strip() == _DEV_CORS_DEFAULT:
-            errors.append(
-                "CORS_ORIGINS must be explicitly set to production frontend origin(s); "
-                "localhost defaults are development-only"
-            )
+        # Empty CORS_ORIGINS is allowed in production (backend-before-frontend):
+        # means no browser cross-origin origins — never expand to "*".
+        if origins:
+            if any(o.strip() == "*" for o in origins):
+                errors.append("Wildcard CORS_ORIGINS (*) is not allowed in production")
+            elif self.cors_origins.strip() == _DEV_CORS_DEFAULT:
+                errors.append(
+                    "CORS_ORIGINS must not use localhost development defaults in production"
+                )
+            elif any(
+                "localhost" in o.lower() or "127.0.0.1" in o
+                for o in origins
+            ):
+                errors.append(
+                    "CORS_ORIGINS must not include localhost/127.0.0.1 origins in production"
+                )
 
         if not (self.livekit_url and self.livekit_api_key and self.livekit_api_secret):
             errors.append("LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET are required in production")
