@@ -2,7 +2,8 @@ from typing import Any, List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
-# Localhost CORS defaults are development-only. Production must set CORS_ORIGINS explicitly.
+# Localhost CORS defaults are development-only.
+# Field default is empty; non-production applies localhost via cors_origins_list.
 _DEV_CORS_DEFAULT = (
     "http://localhost:3000,http://127.0.0.1:3000,"
     "http://localhost:3001,http://127.0.0.1:3001"
@@ -28,8 +29,8 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, alias="PORT")
     host: str = Field(default="0.0.0.0", alias="HOST")
     cors_origins: str = Field(
-        default=_DEV_CORS_DEFAULT,
-        alias="CORS_ORIGINS"
+        default="",
+        alias="CORS_ORIGINS",
     )
 
     # LiveKit settings
@@ -71,15 +72,11 @@ class Settings(BaseSettings):
             errors.append("STT_TOKEN_SECRET must be explicitly set when ENVIRONMENT is 'production'")
 
         origins = self.cors_origins_list
-        # Empty CORS_ORIGINS is allowed in production (backend-before-frontend):
-        # means no browser cross-origin origins — never expand to "*".
+        # Empty / unset CORS_ORIGINS is allowed in production (backend-before-frontend):
+        # cors_origins_list resolves to [] — never localhost defaults, never "*".
         if origins:
             if any(o.strip() == "*" for o in origins):
                 errors.append("Wildcard CORS_ORIGINS (*) is not allowed in production")
-            elif self.cors_origins.strip() == _DEV_CORS_DEFAULT:
-                errors.append(
-                    "CORS_ORIGINS must not use localhost development defaults in production"
-                )
             elif any(
                 "localhost" in o.lower() or "127.0.0.1" in o
                 for o in origins
@@ -221,7 +218,13 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> List[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        raw = (self.cors_origins or "").strip()
+        # Unset/empty: production → []; development/test → localhost defaults
+        if not raw:
+            if self.environment.lower() == "production":
+                return []
+            raw = _DEV_CORS_DEFAULT
+        return [origin.strip() for origin in raw.split(",") if origin.strip()]
 
     def is_provider_configured(self, provider_name: str) -> bool:
         """Helper to inspect provider presence without exposing secrets."""

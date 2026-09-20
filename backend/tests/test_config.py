@@ -31,8 +31,8 @@ def test_cors_origins_parsing():
 
 
 def test_cors_default_origins_include_port_3000_and_3001():
-    """Verify default CORS configuration allows both port 3000 and 3001 for local dev."""
-    settings = Settings(ENVIRONMENT="development")
+    """Development + no CORS_ORIGINS keeps localhost defaults."""
+    settings = Settings(ENVIRONMENT="development", CORS_ORIGINS="")
     origins = settings.cors_origins_list
     assert "http://localhost:3000" in origins
     assert "http://127.0.0.1:3000" in origins
@@ -67,8 +67,8 @@ def test_production_stt_token_secret_validation():
     assert prod_settings.stt_token_secret == "my-super-secret-key-12345"
 
 
-def test_production_allows_empty_cors_origins():
-    """Backend may deploy before frontend — empty CORS means no browser origins."""
+def test_production_no_cors_origins_resolves_to_empty():
+    """Unset/empty CORS_ORIGINS in production → [] (no localhost fallback)."""
     prod = Settings(**_prod_kwargs(CORS_ORIGINS=""))
     assert prod.cors_origins_list == []
 
@@ -83,15 +83,6 @@ def test_production_rejects_localhost_cors_origin():
 
     with pytest.raises(ValueError, match="localhost"):
         Settings(**_prod_kwargs(CORS_ORIGINS="http://localhost:3000"))
-
-
-def test_production_rejects_localhost_cors_default():
-    import pytest
-
-    kw = _prod_kwargs()
-    del kw["CORS_ORIGINS"]
-    with pytest.raises(ValueError, match="localhost"):
-        Settings(**kw)
 
 
 def test_production_rejects_wildcard_cors():
