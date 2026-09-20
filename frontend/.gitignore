@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+*.tsbuildinfo
+
+# Env (keep .env.example)
+.env
+.env*.local
+.env.development
+.env.production
+
+# Logs / coverage
+*.log
+coverage/

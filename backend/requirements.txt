@@ -1,0 +1,15 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+httpx>=0.27.0
+pytest>=8.0.0
+# Phase 3D: pytest-asyncio required by async tests (test_orchestration, test_llm, test_llm_fallback, agents/tests)
+pytest-asyncio==1.4.0
+livekit-api>=1.2.1
+# Phase 3D: livekit rtc SDK for AudioFrame, AudioSource, LocalAudioTrack
+livekit==1.1.19
+# Phase 3D: Sarvam AI Python SDK for Bulbul v3 TTS streaming
+sarvamai==0.1.34
+google-genai>=2.0.0
+openai>=1.0.0

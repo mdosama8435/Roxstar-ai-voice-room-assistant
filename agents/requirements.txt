@@ -1,0 +1,13 @@
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+pytest>=8.0.0
+# Phase 3D: pytest-asyncio for async test support
+pytest-asyncio==1.4.0
+# Phase 3D: WebSocket support for Sarvam TTS streaming
+websockets>=15.0.0
+# Phase 3D: Sarvam AI SDK for Bulbul v3 TTS
+sarvamai==0.1.34
+# Phase 3D: livekit rtc SDK for audio track publishing
+livekit==1.1.19
+# Phase 3D: AccessToken minting for AI participants (raw RTC; not livekit-agents)
+livekit-api>=1.2.1
